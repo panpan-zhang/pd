@@ -136,6 +136,7 @@ func (s *Server) etcdLeaderLoop() {
 				log.Errorf("failed to load leader priority: %v", err)
 				break
 			}
+			// 通过 api.member.SetMemberPropertyByName 手动设置 leaer 的优先级，来改变 leader
 			if myPriority > leaderPriority {
 				err := s.etcd.Server.MoveLeader(ctx, etcdLeader, s.ID())
 				if err != nil {

@@ -608,6 +608,7 @@ func ParseUrls(s string) ([]url.URL, error) {
 // generates a configuration for embedded etcd.
 func (c *Config) genEmbedEtcdConfig() (*embed.Config, error) {
 	cfg := embed.NewConfig()
+	// 设置了 etcd node 的 name
 	cfg.Name = c.Name
 	cfg.Dir = c.DataDir
 	cfg.WalDir = ""
