@@ -68,9 +68,9 @@ type Server struct {
 	// Etcd and cluster informations.
 	etcd        *embed.Etcd
 	client      *clientv3.Client
-	id          uint64 // etcd server id.
+	id          uint64 // etcd server id. 本 node 在 cluster 中的id 与 etcd 一致
 	clusterID   uint64 // pd cluster id.
-	rootPath    string
+	rootPath    string // cluster 在ectd中的 rootPath
 	leaderValue string // leader value saved in etcd leader key.  Every write will use this to check leader validation.
 
 	// Server services.
@@ -198,6 +198,8 @@ func (s *Server) startServer() error {
 	metadataGauge.WithLabelValues(fmt.Sprintf("cluster%d", s.clusterID)).Set(0)
 
 	s.rootPath = path.Join(pdRootPath, strconv.FormatUint(s.clusterID, 10))
+
+	// leaderValue of server 设置为 pdpb.Memeber 对象的序列化值
 	s.leaderValue = s.marshalLeader()
 
 	s.idAlloc = &idAllocator{s: s}

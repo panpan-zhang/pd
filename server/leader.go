@@ -49,6 +49,7 @@ func (s *Server) enableLeader(b bool) {
 	atomic.StoreInt64(&s.isLeader, value)
 }
 
+// 获取leader在etcd中的路径
 func (s *Server) getLeaderPath() string {
 	return path.Join(s.rootPath, "leader")
 }
@@ -74,7 +75,7 @@ func (s *Server) leaderLoop() {
 			log.Infof("server is closed, return leader loop")
 			return
 		}
-
+		// 从ectd获取pd的leader, where is setLeader?
 		leader, err := getLeader(s.client, s.getLeaderPath())
 		if err != nil {
 			log.Errorf("get leader err %v", err)
@@ -100,6 +101,7 @@ func (s *Server) leaderLoop() {
 
 		etcdLeader := s.etcd.Server.Lead()
 		if etcdLeader != s.ID() {
+			// 使 etcd leader 与 cluster leader 一致
 			log.Infof("%v is not etcd leader, skip campaign leader and check later", s.Name())
 			time.Sleep(200 * time.Millisecond)
 			continue
@@ -202,6 +204,7 @@ func (s *Server) marshalLeader() string {
 	return string(data)
 }
 
+// 只有 etcd leader 能进入此函数
 func (s *Server) campaignLeader() error {
 	log.Debugf("begin to campaign leader %s", s.Name())
 
@@ -223,6 +226,7 @@ func (s *Server) campaignLeader() error {
 
 	leaderKey := s.getLeaderPath()
 	// The leader key must not exist, so the CreateRevision is 0.
+	// 设置 cluster 的 leader
 	resp, err := s.txn().
 		If(clientv3.Compare(clientv3.CreateRevision(leaderKey), "=", 0)).
 		Then(clientv3.OpPut(leaderKey, s.leaderValue, clientv3.WithLease(clientv3.LeaseID(leaseResp.ID)))).
@@ -282,6 +286,7 @@ func (s *Server) campaignLeader() error {
 			if err = s.updateTimestamp(); err != nil {
 				return errors.Trace(err)
 			}
+			// 当etcd leader 发生变化， cluster leader 也是随之变化
 			etcdLeader := s.etcd.Server.Lead()
 			if etcdLeader != s.ID() {
 				log.Infof("etcd leader changed, %s resigns leadership", s.Name())

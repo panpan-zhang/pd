@@ -109,6 +109,7 @@ func getProtoMsg(c *clientv3.Client, key string, msg proto.Message, opts ...clie
 	return true, nil
 }
 
+// 获取 Cluster ID
 func initOrGetClusterID(c *clientv3.Client, key string) (uint64, error) {
 	ctx, cancel := context.WithTimeout(c.Ctx(), requestTimeout)
 	defer cancel()
